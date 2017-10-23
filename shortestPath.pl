@@ -40,5 +40,3 @@ minConnection([(Distance, Path) | T], (MinDistance, MinPath)) :-
 shortestConnection(From, To, Shortest) :- 
   findall(Connection, findConnection(From, To, Connection), AllConnections),
   minConnection(AllConnections, Shortest).
-
-/* http://www.learnprolognow.org/lpnpage.php?pagetype=html&pageid=lpn-htmlse49 */
