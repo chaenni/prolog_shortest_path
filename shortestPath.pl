@@ -3,36 +3,42 @@ edge(zurich, winterthur, 12).
 edge(winterthur, frauenfeld, 10).
 edge(zurich, schaffhausen, 30).
 edge(schaffhausen, frauenfeld, 30).
-/*edge(X, Y, Distance) :- edge(Y, X, Distance).*/
 
-connection(X, Y, [Distance, [X, Y]]) :- edge(X, Y, Distance).
-connection(X, Y, [Distance, [X | L]]) :- 
-  edge(X, Z, Distance1),
-  connection(Z, Y, [Distance2, L]),
+accReverse([],L,L).
+accReverse([H|T],Acc,Rev):-
+    accReverse(T,[H|Acc],Rev).
+reverse(L1,L2):- accReverse(L1,[],L2).
+
+connection(From, To, (Distance, [From, To])) :- edge(From, To, Distance).
+connection(From, To, (Distance, [From | Stations])) :- 
+  edge(From, Intermediate, Distance1),
+  connection(Intermediate, To, (Distance2, Stations)),
   Distance is Distance1 + Distance2.
 
-minConnection([[Distance1, Path1], [Distance2, Path2]], Min) :-
+findConnection(From, To, Result) :- connection(From, To, Result).
+findConnection(From, To, (Distance, StationsReversed)) :-
+  connection(To, From, (Distance, Stations)),
+  reverse(Stations, StationsReversed).
+
+minConnection([(Distance1, Path1), (Distance2, Path2)], Min) :-
   Distance1 =< Distance2, 
-  Min = [Distance1, Path1].
-
-minConnection([[Distance1, Path1], [Distance2, Path2]], Min) :-
+  Min = (Distance1, Path1).
+minConnection([(Distance1, Path1), (Distance2, Path2)], Min) :-
   Distance1 > Distance2, 
-  Min = [Distance2, Path2].
-
-minConnection([[Distance, Path] | T], [MinDistance, MinPath]) :-
-  minConnection(T, [MinDistanceOld, _]), 
-  Distance <= MinDistanceOld,
+  Min = (Distance2, Path2).
+minConnection([(Distance, Path) | T], (MinDistance, MinPath)) :-
+  minConnection(T, (MinDistanceOld, _)), 
+  Distance =< MinDistanceOld,
   MinDistance = Distance,
   MinPath = Path.
-
-minConnection([[Distance, Path] | T], [MinDistance, MinPath]) :-
-  minConnection(T, [MinDistanceOld, MinPathOld]), 
+minConnection([(Distance, Path) | T], (MinDistance, MinPath)) :-
+  minConnection(T, (MinDistanceOld, MinPathOld)), 
   Distance > MinDistanceOld,
   MinDistance = MinDistanceOld,
   MinPath = MinPathOld.
 
-shortestConnection(X, Y, Shortest) :- 
-  findall(Connection, connection(X, Y, Connection), Connections),
-  minConnection(Connections, Shortest).
+shortestConnection(From, To, Shortest) :- 
+  findall(Connection, findConnection(From, To, Connection), AllConnections),
+  minConnection(AllConnections, Shortest).
 
 /* http://www.learnprolognow.org/lpnpage.php?pagetype=html&pageid=lpn-htmlse49 */
